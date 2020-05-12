@@ -21,12 +21,7 @@ namespace pokeemerald_pokefirered_mergetool
             pathOutput = paths[2];
 
             // Copy pokeemerald to output to use as a base for the merge
-            bool success = FileManager.CopyDirectory(pathEmerald, pathOutput, true);
-
-            if (!success)
-            {
-                return 1;
-            }
+            FileManager.CopyDirectory(pathEmerald, pathOutput, true);
 
             // Edit palette count
             FieldMapEditor.EditFieldMapPaletteTotal(pathOutput);
@@ -35,7 +30,29 @@ namespace pokeemerald_pokefirered_mergetool
             TilesetHeaderIncEditor.CreateObjectsFromEntries(pathFireRed);
             TilesetHeaderIncEditor.WriteEntriesToFile(pathOutput);
 
+            // Copy prefixed tileset graphics entries
+            TilesetGraphicsIncEditor.CreateObjectsFromEntries(pathFireRed);
+            TilesetGraphicsIncEditor.WriteEntriesToFile(pathOutput);
 
+            // Copy prefixed tileset metatiles entries
+            TilesetMetatilesIncEditor.CreateObjectsFromEntries(pathFireRed);
+            TilesetMetatilesIncEditor.WriteEntriesToFile(pathOutput);
+
+            // Copy prefixed graphics rule entries
+            GraphicsFileRuleEditor.CreateObjectsFromEntries(pathFireRed);
+            GraphicsFileRuleEditor.WriteEntriesToFile(pathOutput);
+
+            // Copy prefixed layout entries
+            LayoutsJsonEditor.CreateObjectsFromEntries(pathFireRed);
+            LayoutsJsonEditor.WriteEntriesToFile(pathOutput);
+
+            // Copy prefixed event script entries
+            EventScriptsEditor.CreateObjectsFromEntries(pathFireRed);
+            EventScriptsEditor.WriteEntriesToFile(pathOutput);
+
+            // Copy re-numbers map groups with prefixed entries
+            MapGroupsEditor.CreateObjectsFromEntries(pathFireRed);
+            MapGroupsEditor.WriteEntriesToFile(pathOutput);
 
             return 0;
         }
