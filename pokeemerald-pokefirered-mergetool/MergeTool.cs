@@ -1,4 +1,6 @@
-﻿using System;
+﻿using pokeemerald_pokefirered_mergetool.Core;
+using pokeemerald_pokefirered_mergetool.FileEditors;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,6 +14,14 @@ namespace pokeemerald_pokefirered_mergetool
         private static string pathFireRed;
         private static string pathOutput;
 
+        public const string PREFIX = "FR_";
+
+        public enum Version
+        {
+            FireRed,
+            Emerald
+        }
+
         // returns a result value
         public static long StartMerge(string[] paths)
         {
@@ -20,39 +30,67 @@ namespace pokeemerald_pokefirered_mergetool
             pathFireRed = paths[1];
             pathOutput = paths[2];
 
+            /// TODO: Check if output path is empty before copying to it
+
             // Copy pokeemerald to output to use as a base for the merge
-            FileManager.CopyDirectory(pathEmerald, pathOutput, true);
+            DirectoryUtil.CopyDirectory(pathEmerald, pathOutput, true);
+
+            // Copy tilesets, layouts, and maps directories, and add prefix
+            DirectoryUtil.CopyDirectory(pathFireRed + DirectoryUtil.DIR_TILESETS_PRIMARY,
+                                        pathOutput + DirectoryUtil.DIR_TILESETS_PRIMARY,
+                                        true,
+                                        false,
+                                        true);
+
+            DirectoryUtil.CopyDirectory(pathFireRed + DirectoryUtil.DIR_TILESETS_SECONDARY,
+                                        pathOutput + DirectoryUtil.DIR_TILESETS_SECONDARY,
+                                        true,
+                                        false,
+                                        true);
+
+            DirectoryUtil.CopyDirectory(pathFireRed + DirectoryUtil.DIR_LAYOUTS,
+                                        pathOutput + DirectoryUtil.DIR_LAYOUTS,
+                                        true,
+                                        false,
+                                        true);
+
+            DirectoryUtil.CopyDirectory(pathFireRed + DirectoryUtil.DIR_MAPS,
+                                        pathOutput + DirectoryUtil.DIR_MAPS,
+                                        true,
+                                        false,
+                                        true);
 
             // Edit palette count
             FieldMapEditor.EditFieldMapPaletteTotal(pathOutput);
 
-            // Copy prefixed tileset header entries
-            TilesetHeaderIncEditor.CreateObjectsFromEntries(pathFireRed);
-            TilesetHeaderIncEditor.WriteEntriesToFile(pathOutput);
+            // Read tileset headers/graphics/metatiles entries and layouts
+            List<Tileset> tilesetsFireRed = Tileset.CreateTilesets(pathFireRed);
+            List<Layout> layoutsFireRed = Layout.CreateLayouts(pathFireRed);
 
-            // Copy prefixed tileset graphics entries
-            TilesetGraphicsIncEditor.CreateObjectsFromEntries(pathFireRed);
-            TilesetGraphicsIncEditor.WriteEntriesToFile(pathOutput);
+            // Convert tileset data to Emerald Format
+            TilesetConverter.StitchSlicedPrimaryDataToSecondaries(          // TODO: Update paletts to work with 14
+                tilesetsFireRed,
+                TilesetConverter.SlicePrimaryTilesetData(tilesetsFireRed),
+                layoutsFireRed);
 
-            // Copy prefixed tileset metatiles entries
-            TilesetMetatilesIncEditor.CreateObjectsFromEntries(pathFireRed);
-            TilesetMetatilesIncEditor.WriteEntriesToFile(pathOutput);
+            // Write tilesets and layouts
+            Tileset.WriteTilesetsToIncFiles(pathOutput, tilesetsFireRed);
+            Layout.WriteLayoutsToFile(pathOutput, layoutsFireRed);
 
             // Copy prefixed graphics rule entries
             GraphicsFileRuleEditor.CreateObjectsFromEntries(pathFireRed);
             GraphicsFileRuleEditor.WriteEntriesToFile(pathOutput);
 
-            // Copy prefixed layout entries
-            LayoutsJsonEditor.CreateObjectsFromEntries(pathFireRed);
-            LayoutsJsonEditor.WriteEntriesToFile(pathOutput);
-
             // Copy prefixed event script entries
-            EventScriptsEditor.CreateObjectsFromEntries(pathFireRed);
+            EventScriptsEditor.CreateObjectsFromEntries(pathFireRed);       // TODO: Adjust num of tiles to account for sliced/stitched tiles
             EventScriptsEditor.WriteEntriesToFile(pathOutput);
 
-            // Copy re-numbers map groups with prefixed entries
-            MapGroupsEditor.CreateObjectsFromEntries(pathFireRed);
+            // Copy re-numbered map groups with prefixed entries
+            MapGroupsEditor.CreateObjectsFromEntries(pathFireRed); 
             MapGroupsEditor.WriteEntriesToFile(pathOutput);
+
+            // Go through the moved maps and update their files
+            MapJsonEditor.UpdateAllFireRedMapFiles(pathOutput);         // TODO: Fix issue where empty scripts are being prefixed
 
             return 0;
         }

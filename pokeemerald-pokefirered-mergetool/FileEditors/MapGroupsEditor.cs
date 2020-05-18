@@ -37,9 +37,7 @@ namespace pokeemerald_pokefirered_mergetool
 
         public static void WriteEntriesToFile(string writeDir)
         {
-            StreamReader reader = new StreamReader(writeDir + FILE_PATH);
-            string fileText = reader.ReadToEnd();
-            reader.Close();
+            string fileText = File.ReadAllText(writeDir + FILE_PATH);
 
             string[] fileTextChunks = new string[3];
 
@@ -65,7 +63,14 @@ namespace pokeemerald_pokefirered_mergetool
 
                 for (int j = 0; j < mapGroupContents[i].Length; j++)
                 {
-                    newMapGroups += "    \"" + PREFIX + mapGroupContents[i][j] + "\"\n";
+                    newMapGroups += "    \"" + PREFIX + mapGroupContents[i][j] + "\"";
+
+                    if (j < mapGroupContents[i].Length - 1)
+                    {
+                        newMapGroups += ",";
+                    }
+
+                    newMapGroups += "\n";
                 }
 
                 newMapGroups += "  ],";

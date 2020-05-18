@@ -7,9 +7,14 @@ using System.Threading.Tasks;
 
 namespace pokeemerald_pokefirered_mergetool
 {
-    static class FileManager
+    static class DirectoryUtil
     {
-        public static bool CopyDirectory(string sourceDirName, string destDirName, bool copySubDirs)
+        public const string DIR_TILESETS_PRIMARY = @"\data\tilesets\primary";
+        public const string DIR_TILESETS_SECONDARY = @"\data\tilesets\secondary";
+        public const string DIR_LAYOUTS = @"\data\layouts";
+        public const string DIR_MAPS = @"\data\maps";
+
+        public static bool CopyDirectory(string sourceDirName, string destDirName, bool copySubDirs, bool copyRootFiles = true, bool addPrefixToFolders = false)
         {
             // Get the subdirectories for the specified directory.
             DirectoryInfo dir = new DirectoryInfo(sourceDirName);
@@ -27,18 +32,16 @@ namespace pokeemerald_pokefirered_mergetool
             {
                 Directory.CreateDirectory(destDirName);
             }
-            // If the destination isn't empty, cancel operation
-            else if (Directory.EnumerateFileSystemEntries(destDirName).Any())
-            {
-                return false;
-            }
 
             // Get the files in the directory and copy them to the new location.
-            FileInfo[] files = dir.GetFiles();
-            foreach (FileInfo file in files)
+            if (copyRootFiles)
             {
-                string temppath = Path.Combine(destDirName, file.Name);
-                file.CopyTo(temppath, false);
+                FileInfo[] files = dir.GetFiles();
+                foreach (FileInfo file in files)
+                {
+                    string temppath = Path.Combine(destDirName, file.Name);
+                    file.CopyTo(temppath, false);
+                }
             }
 
             // If copying subdirectories, copy them and their contents to new location.
@@ -46,12 +49,13 @@ namespace pokeemerald_pokefirered_mergetool
             {
                 foreach (DirectoryInfo subdir in dirs)
                 {
-                    string temppath = Path.Combine(destDirName, subdir.Name);
+                    string temppath = Path.Combine(destDirName, addPrefixToFolders ? MergeTool.PREFIX + subdir.Name : subdir.Name);
                     CopyDirectory(subdir.FullName, temppath, copySubDirs);
                 }
             }
 
             return true;
         }
+
     }
 }

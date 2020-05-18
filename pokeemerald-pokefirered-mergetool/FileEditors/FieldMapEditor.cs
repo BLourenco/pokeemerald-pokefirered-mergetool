@@ -15,17 +15,8 @@ namespace pokeemerald_pokefirered_mergetool
 
         public static void EditFieldMapPaletteTotal(string dir)
         {
-            StreamReader reader = new StreamReader(dir + FILE_PATH);
-            string input = reader.ReadToEnd();
-            reader.Close();
-
-            using (StreamWriter writer = new StreamWriter(dir + FILE_PATH))
-            {
-                string output = input.Replace(NUM_PALS_TOTAL_FIND, NUM_PALS_TOTAL_REPLACE);
-                writer.Write(output);
-
-                writer.Close();
-            }
+            string input = File.ReadAllText(dir + FILE_PATH);
+            File.WriteAllText(dir + FILE_PATH, input.Replace(NUM_PALS_TOTAL_FIND, NUM_PALS_TOTAL_REPLACE));
         }
     }
 }

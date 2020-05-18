@@ -17,8 +17,7 @@ namespace pokeemerald_pokefirered_mergetool
 
         public static void CreateObjectsFromEntries(string readDir)
         {
-            StreamReader reader = new StreamReader(readDir + FILE_PATH);
-            string input = reader.ReadToEnd();
+            string input = File.ReadAllText(readDir + FILE_PATH);
 
             string[] splitString = { ENTRY_START };
             string[] entries = input.Split(splitString, StringSplitOptions.RemoveEmptyEntries);
@@ -36,9 +35,7 @@ namespace pokeemerald_pokefirered_mergetool
 
         public static void WriteEntriesToFile(string writeDir)
         {
-            StreamReader reader = new StreamReader(writeDir + FILE_PATH);
-            string input = reader.ReadToEnd();
-            reader.Close();
+            string input = File.ReadAllText(writeDir + FILE_PATH);
 
             string appendedEntries = "\n";
 
