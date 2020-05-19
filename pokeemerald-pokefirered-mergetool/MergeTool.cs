@@ -30,6 +30,8 @@ namespace pokeemerald_pokefirered_mergetool
             pathFireRed = paths[1];
             pathOutput = paths[2];
 
+            //BitmapEditor.SliceAndStitchTiles();
+
             /// TODO: Check if output path is empty before copying to it
 
             // Copy pokeemerald to output to use as a base for the merge
@@ -61,20 +63,20 @@ namespace pokeemerald_pokefirered_mergetool
                                         true);
 
             // Edit palette count
-            FieldMapEditor.EditFieldMapPaletteTotal(pathOutput);
+            //FieldMapEditor.EditFieldMapPaletteTotal(pathOutput);
 
             // Read tileset headers/graphics/metatiles entries and layouts
             List<Tileset> tilesetsFireRed = Tileset.CreateTilesets(pathFireRed);
             List<Layout> layoutsFireRed = Layout.CreateLayouts(pathFireRed);
 
             // Convert tileset data to Emerald Format
-            TilesetConverter.StitchSlicedPrimaryDataToSecondaries(          // TODO: Update paletts to work with 14
+            TilesetConverter.StitchSlicedPrimaryDataToSecondaries(
                 tilesetsFireRed,
                 TilesetConverter.SlicePrimaryTilesetData(tilesetsFireRed),
                 layoutsFireRed);
 
             // Write tilesets and layouts
-            Tileset.WriteTilesetsToIncFiles(pathOutput, tilesetsFireRed);
+            Tileset.WriteTilesetsToFiles(pathOutput, tilesetsFireRed);
             Layout.WriteLayoutsToFile(pathOutput, layoutsFireRed);
 
             // Copy prefixed graphics rule entries
@@ -86,7 +88,7 @@ namespace pokeemerald_pokefirered_mergetool
             EventScriptsEditor.WriteEntriesToFile(pathOutput);
 
             // Copy re-numbered map groups with prefixed entries
-            MapGroupsEditor.CreateObjectsFromEntries(pathFireRed); 
+            MapGroupsEditor.CreateObjectsFromEntries(pathFireRed);
             MapGroupsEditor.WriteEntriesToFile(pathOutput);
 
             // Go through the moved maps and update their files

@@ -1,5 +1,6 @@
 ﻿using pokeemerald_pokefirered_mergetool.Core;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 
@@ -19,7 +20,10 @@ namespace pokeemerald_pokefirered_mergetool.FileEditors
                 SlicedPrimaryData spd = new SlicedPrimaryData(
                     tilesets[i].name,
                     tilesets[i].SliceTilesImage(),
-                    tilesets[i].SliceMetatiles());
+                    tilesets[i].SliceMetatiles(),
+                    tilesets[i].palettes[6]);
+
+                spdList.Add(spd);
             }
 
             return spdList;
@@ -42,6 +46,7 @@ namespace pokeemerald_pokefirered_mergetool.FileEditors
 
                         tilesets[k].StitchMetatiles(slicedPrimaryData[i].slicedMetatiles);
                         tilesets[k].StitchTilesImage(slicedPrimaryData[i].slicedTiles);
+                        tilesets[k].palettes[6] = slicedPrimaryData[i].slicedPalette;
                     }                    
                 }
             }

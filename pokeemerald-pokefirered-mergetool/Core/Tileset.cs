@@ -74,7 +74,7 @@ namespace pokeemerald_pokefirered_mergetool.Core
         public string metatile_attrs_path { get; private set; }
 
         // Data
-        public Image tilesImage { get; private set; }
+        public Bitmap tilesImage { get; private set; }
         public List<Metatile> metatiles { get; private set; }
         public List<Palette> palettes { get; private set; }
 
@@ -194,7 +194,7 @@ namespace pokeemerald_pokefirered_mergetool.Core
                 // Assign image of tiles
                 //if (tileset.tilesPath != null) /// TODO: Add fallback, either read from graphics.c or generate paths
                 {
-                    tileset.tilesImage = Image.FromFile(readPath + @"\" + tileset.tilesPath.Replace("4bpp", "png").Replace(".lz", ""));
+                    tileset.tilesImage = (Bitmap)Image.FromFile(readPath + @"\" + tileset.tilesPath.Replace("4bpp", "png").Replace(".lz", ""));
 
                     // Assign palettes
                     tileset.palettes = new List<Palette>();
@@ -216,7 +216,7 @@ namespace pokeemerald_pokefirered_mergetool.Core
             return tilesets;
         }
 
-        public static void WriteTilesetsToIncFiles(string writePath, List<Tileset> tilesets)            
+        public static void WriteTilesetsToFiles(string writePath, List<Tileset> tilesets)            
         {
             string headersText = File.ReadAllText(writePath + "\\" + PATH_HEADERS);
             string graphicsText = File.ReadAllText(writePath + "\\" + PATH_GRAPHICS);
@@ -242,12 +242,36 @@ namespace pokeemerald_pokefirered_mergetool.Core
                 File.WriteAllBytes(writePath + "\\" + tilesets[i].GetPrefixedPath(tilesets[i].metatile_attrs_path), metatileAttributeBytes.ToArray());
 
                 // tiles.png
-                tilesets[i].tilesImage.Save(writePath + "\\" + tilesets[i].GetPrefixedPath(tilesets[i].tilesPath), ImageFormat.Png);
+                EncoderParameters encoderParamaters = new EncoderParameters(1);
+                EncoderParameter encoderParameter = new EncoderParameter(System.Drawing.Imaging.Encoder.ColorDepth, 4);
+                encoderParamaters.Param[0] = encoderParameter;
+                tilesets[i].tilesImage.Save(writePath + "\\" + tilesets[i].GetPrefixedPath(tilesets[i].tilesPath).Replace("4bpp", "png").Replace(".lz", ""), GetEncoderInfo("image/png"), encoderParamaters);
+
+                // palettes
+                for (int j = 0; j < tilesets[i].palettes.Count; j++)
+                {
+                    string palText = tilesets[i].palettes[j].GetPaletteText();
+
+                    File.WriteAllText(writePath + "\\" + tilesets[i].GetPrefixedPath(tilesets[i].palettePaths[j]).Replace(".gbapal", ".pal"), palText);
+                }
             }
 
             File.WriteAllText(writePath + "\\" + PATH_HEADERS, headersText);
             File.WriteAllText(writePath + "\\" + PATH_GRAPHICS, graphicsText);
             File.WriteAllText(writePath + "\\" + PATH_METATILES, metatilesText);
+        }
+
+        private static ImageCodecInfo GetEncoderInfo(String mimeType)
+        {
+            int j;
+            ImageCodecInfo[] encoders;
+            encoders = ImageCodecInfo.GetImageEncoders();
+            for (j = 0; j < encoders.Length; ++j)
+            {
+                if (encoders[j].MimeType == mimeType)
+                    return encoders[j];
+            }
+            return null;
         }
 
         public List<Metatile> SliceMetatiles()
@@ -264,32 +288,16 @@ namespace pokeemerald_pokefirered_mergetool.Core
             return slicedMetaTiles;
         }
 
-        public Image SliceTilesImage()
+        /// <summary>
+        /// Slices the tileset's tiles down to 128x256px,
+        /// and returns the sliced off tiles.
+        /// </summary>
+        /// <returns>The sliced off tiles</returns>
+        public Bitmap SliceTilesImage()
         {
-            Bitmap topHalf;
-            using (Bitmap primary128x256 = new Bitmap(TARGET_PRIMARY_TOP.Width, TARGET_PRIMARY_TOP.Height))
-            {
-                using (Graphics g = Graphics.FromImage(primary128x256))
-                {
-                    g.DrawImage(this.tilesImage, TARGET_PRIMARY_TOP, TARGET_PRIMARY_TOP, GraphicsUnit.Pixel);
-                }
-
-                topHalf = new Bitmap(primary128x256);
-            }
-
-            Bitmap bottomHalf;
-            using (Bitmap primary128x64 = new Bitmap(TARGET_PRIMARY_BOTTOM.Width, TARGET_PRIMARY_BOTTOM.Height))
-            {
-                using (Graphics g = Graphics.FromImage(primary128x64))
-                {
-                    g.DrawImage(this.tilesImage, TARGET_PRIMARY_BOTTOM, SOURCE_PRIMARY_BOTTOM, GraphicsUnit.Pixel);
-                }
-
-                bottomHalf = new Bitmap(primary128x64);
-            }
-
-            this.tilesImage = topHalf;
-            return bottomHalf;
+            Bitmap slice;
+            tilesImage = BitmapEditor.SliceTiles(tilesImage, out slice);
+            return slice;
         }
 
         public void StitchMetatiles(List<Metatile> metatiles)
@@ -297,23 +305,9 @@ namespace pokeemerald_pokefirered_mergetool.Core
             this.metatiles.InsertRange(0, metatiles);
         }
 
-        public void StitchTilesImage(Image slicedImage)
+        public void StitchTilesImage(Bitmap slicedImage)
         {
-            int combinedHeight = this.tilesImage.Height + slicedImage.Height;
-
-            using (Bitmap secondary128x = new Bitmap(128, combinedHeight))
-            {
-                using (Graphics g = Graphics.FromImage(secondary128x))
-                {
-                    g.DrawImage(slicedImage, TARGET_PRIMARY_BOTTOM, TARGET_PRIMARY_BOTTOM, GraphicsUnit.Pixel);
-                    g.DrawImage(this.tilesImage, 
-                        new Rectangle(0,64, this.tilesImage.Width, this.tilesImage.Height),
-                        new Rectangle(0, 0, this.tilesImage.Width, this.tilesImage.Height), 
-                        GraphicsUnit.Pixel);
-                }
-
-                this.tilesImage = new Bitmap(secondary128x);
-            }
+            this.tilesImage = BitmapEditor.StitchTiles(slicedImage, this.tilesImage);
         }
 
         private string GetTilesetHeadersText(bool usePrefix)

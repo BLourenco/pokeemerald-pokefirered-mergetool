@@ -66,6 +66,7 @@
     <Compile Include="FileEditors\MapGroupsEditor.cs" />
     <Compile Include="FileEditors\MapJsonEditor.cs" />
     <Compile Include="FileEditors\TilesetConverter.cs" />
+    <Compile Include="BitmapEditor.cs" />
     <Compile Include="Models\GraphicsFileRuleEntry.cs" />
     <Compile Include="Json\Layout.cs" />
     <Compile Include="Json\Map.cs" />
